@@ -1,5 +1,5 @@
 {
-  "name": "@project-sunbird/client-cloud-services",
+  "name": "client-cloud-services",
   "version": "0.0.3",
   "description": "Sunbird Client Services - To access cloud services",
   "main": "dist/bundle.js",
