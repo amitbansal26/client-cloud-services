@@ -20,7 +20,7 @@ jobs:
           command: |
             if [ -z $CIRCLE_PR_NUMBER ]; then
               echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-              npm publish project-client-cloud-services-*
+              npm publish
             else
               echo "skipping npm publish"
             fi
