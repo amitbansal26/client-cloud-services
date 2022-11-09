@@ -1,0 +1,10 @@
+/src/
+/tests/
+*.csv
+*.log
+/reports/
+webpack.config.js
+*.html
+en.json
+.github/
+/docs/

@@ -1,0 +1,19 @@
+{
+  "env": {
+    "development": {
+      "compact": false
+    },
+    "production": {
+      "compact": false
+    }
+  },
+  "plugins": ["@babel/syntax-dynamic-import"],
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": false
+      }
+    ]
+  ]
+}
