@@ -19,10 +19,7 @@ export class AzureStorageService extends BaseStorageService {
 
   constructor(config) {
     super();
-    if (!_.get(config, 'sunbird_azure_account_name') ||
-    !_.get(config, 'sunbird_azure_account_key') ||
-    !_.get(config, 'sunbird_azure_report_container_name')
-    ) {
+    if (!_.get(config, 'sunbird_azure_account_name') || !_.get(config, 'sunbird_azure_account_key')) {
       throw new Error('AzureStorageService :: Required configuration is missing')
     }
     this.sunbird_azure_report_container_name = _.get(config, 'sunbird_azure_report_container_name')
