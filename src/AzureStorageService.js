@@ -22,7 +22,7 @@ export class AzureStorageService extends BaseStorageService {
     if (!_.get(config, 'identity') || !_.get(config, 'credential')) {
       throw new Error('Azure__StorageService :: Required configuration is missing');
     }
-    this.reportsContainer = _.get(config, 'reportsContainer') + '/';
+    this.reportsContainer = _.get(config, 'reportsContainer');
     this.blobService = azure.createBlobService(config?.identity, config?.credential);
   }
 
