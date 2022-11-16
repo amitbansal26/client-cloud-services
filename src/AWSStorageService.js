@@ -9,21 +9,31 @@
  */
 
 const BaseStorageService  = require('./BaseStorageService');
-const envHelper           = require('../environmentVariables');
 const { logger }          = require('@project-sunbird/logger');
 const _                   = require('lodash');
 const dateFormat          = require('dateformat');
 const uuidv1              = require('uuid/v1');
 const async               = require('async');
-const reports             = envHelper.sunbird_aws_reports + '/';
-const region              = envHelper.sunbird_aws_region?.toString();
 const storageLogger       = require('./storageLogger');
 const { getSignedUrl }    = require("@aws-sdk/s3-request-presigner");
 const { S3Client, GetObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
-const client              = new S3Client({ region });
 const { Upload }          = require("@aws-sdk/lib-storage");
 const multiparty          = require('multiparty');
-class AWSStorageService extends BaseStorageService {
+export class AWSStorageService extends BaseStorageService {
+
+  constructor(config) {
+    super();
+    if (!_.get(config, 'identity') || !_.get(config, 'credential') ||
+      !_.get(config, 'region') || !_.get(config, 'containerName')) {
+      throw new Error('AWS__StorageService :: Required configuration is missing');
+    }
+    process.env.AWS_ACCESS_KEY_ID = _.get(config, 'identity');
+    process.env.AWS_SECRET_ACCESS_KEY = _.get(config, 'credential');
+    const region = _.get(config, 'region').toString();
+    this.client = new S3Client({ region });
+    this.containerName = _.get(config, 'containerName');
+    this.reportsContainer = _.get(config, 'reportsContainer') + '/';
+  }
 
   /**
    * @description                     - Function to generate AWS command for an operation
@@ -47,7 +57,7 @@ class AWSStorageService extends BaseStorageService {
     const params = { Bucket: bucketName, Key: prefix + fileToGet };
     const command = new HeadObjectCommand(params);
     logger.info({ msg: 'AWS__StorageService - fileExists called for bucketName ' + bucketName + ' for file ' + params.Key });
-    await client.send(command).then((resp) => {
+    await this.client.send(command).then((resp) => {
       cb(null, resp)
     }).catch((err) => {
       cb(err);
@@ -61,7 +71,7 @@ class AWSStorageService extends BaseStorageService {
    */
   fileReadStream(bucketName = undefined, fileToGet = undefined) {
     return async (req, res, next) => {
-      let bucketName = envHelper.sunbird_aws_bucket_name;
+      let bucketName = this.containerName;
       let fileToGet = req.params.slug.replace('__', '\/') + '/' + req.params.filename;
       logger.info({ msg: 'AWS__StorageService - fileReadStream called for bucketName ' + bucketName + ' for file ' + fileToGet });
 
@@ -77,7 +87,7 @@ class AWSStorageService extends BaseStorageService {
               resolve(Buffer.concat(chunks).toString("utf8"))
             });
           });
-        await client.send(this.getAWSCommand(bucketName, fileToGet, reports)).then((resp) => {
+        await this.client.send(this.getAWSCommand(bucketName, fileToGet, this.reportsContainer)).then((resp) => {
           streamToString(_.get(resp, 'Body')).then((data) => {
             res.end(data);
           }).catch((err) => {
@@ -91,13 +101,13 @@ class AWSStorageService extends BaseStorageService {
           }
         });
       } else {
-        this.fileExists(bucketName, fileToGet, reports, async (error, resp) => {
+        this.fileExists(bucketName, fileToGet, this.reportsContainer, async (error, resp) => {
           if (_.get(error, '$metadata.httpStatusCode') == 404) {
             storageLogger.s404(res, 'AWS__StorageService : fileExists error - Error with status code 404', error, 'File does not exists');
           } else if (_.get(resp, '$metadata.httpStatusCode') == 200) {
-            const command = this.getAWSCommand(bucketName, fileToGet, reports);
+            const command = this.getAWSCommand(bucketName, fileToGet, this.reportsContainer);
             // `expiresIn` - The number of seconds before the presigned URL expires
-            const presignedURL = await getSignedUrl(client, command, { expiresIn: 3600 });
+            const presignedURL = await getSignedUrl(this.client, command, { expiresIn: 3600 });
             const response = {
               responseCode: "OK",
               params: {
@@ -120,7 +130,7 @@ class AWSStorageService extends BaseStorageService {
 
   getFileProperties() {
     return (req, res, next) => {
-      const bucketName = envHelper.sunbird_aws_bucket_name;
+      const bucketName = this.containerName;
       const fileToGet = JSON.parse(req.query.fileNames);
       logger.info({ msg: 'AWS__StorageService - getFileProperties called for bucketName ' + bucketName + ' for file ' + fileToGet });
       const responseData = {};
@@ -169,7 +179,7 @@ class AWSStorageService extends BaseStorageService {
   }
 
   async getBlobProperties(request, callback) {
-    this.fileExists(request.bucketName, request.file, reports, (error, resp) => {
+    this.fileExists(request.bucketName, request.file, this.reportsContainer, (error, resp) => {
       if (_.get(error, '$metadata.httpStatusCode') == 404) {
         logger.error({ msg: 'AWS__StorageService : getBlobProperties_fileExists error - Error with status code 404. File does not exists - ' + request.file, error: error });
         callback({ msg: _.get(error, 'name'), statusCode: _.get(error, '$metadata.httpStatusCode'), filename: request.file, reportname: request.reportname })
@@ -190,7 +200,7 @@ class AWSStorageService extends BaseStorageService {
   }
 
   async getFileAsText(container = undefined, fileToGet = undefined, callback) {
-    const bucketName = envHelper.sunbird_aws_bucket_name;
+    const bucketName = this.containerName;
     logger.info({ msg: 'AWS__StorageService : getFileAsText called for bucket ' + bucketName + ' container ' + container + ' for file ' + fileToGet });
     const streamToString = (stream) =>
       new Promise((resolve, reject) => {
@@ -203,7 +213,7 @@ class AWSStorageService extends BaseStorageService {
           resolve(Buffer.concat(chunks).toString("utf8"))
         });
       });
-    await client.send(this.getAWSCommand(bucketName, fileToGet, container)).then((resp) => {
+    await this.client.send(this.getAWSCommand(bucketName, fileToGet, container)).then((resp) => {
       streamToString(_.get(resp, 'Body')).then((data) => {
         callback(null, data);
       }).catch((err) => {
@@ -223,7 +233,7 @@ class AWSStorageService extends BaseStorageService {
   blockStreamUpload(uploadContainer = undefined) {
     return (req, res) => {
       try {
-        const bucketName = envHelper.sunbird_aws_bucket_name;
+        const bucketName = this.containerName;
         const blobFolderName = new Date().toLocaleDateString();
         let form = new multiparty.Form();
         form.on('part', async (part) => {
@@ -241,7 +251,7 @@ class AWSStorageService extends BaseStorageService {
             });
             try {
               const parallelUploads3 = new Upload({
-                client: client,
+                client: this.client,
                 params: { Bucket: bucketName, Key: keyPath, Body: part },
                 leavePartsOnError: false,
               });
@@ -340,5 +350,3 @@ class AWSStorageService extends BaseStorageService {
     }
   }
 }
-
-module.exports = AWSStorageService;
