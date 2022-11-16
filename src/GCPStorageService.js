@@ -8,7 +8,6 @@
  */
 
 const BaseStorageService  = require('./BaseStorageService');
-const envHelper           = require('../environmentVariables');
 const storageLogger       = require('./storageLogger');
 const { Storage }         = require('@google-cloud/storage');
 const { logger }          = require('@project-sunbird/logger');
@@ -16,22 +15,28 @@ const async               = require('async');
 const _                   = require('lodash');
 const dateFormat          = require('dateformat');
 const uuidv1              = require('uuid/v1');
-const reports             = envHelper.sunbird_gcloud_reports + '/';
 
+export class GCPStorageService extends BaseStorageService {
 
-const _storage = new Storage({
-  credentials: {
-    client_email: envHelper.sunbird_gcloud_client_email,
-    private_key: envHelper.sunbird_gcloud_private_key?.toString()
-  },
-  projectId: envHelper.sunbird_gcloud_projectId
-});
-
-
-class GCPStorageService extends BaseStorageService {
+  constructor(config) {
+    super();
+    if (!_.get(config, 'identity') || !_.get(config, 'credential') ||
+      !_.get(config, 'projectId') || !_.get(config, 'containerName')) {
+      throw new Error('GCLOUD__StorageService :: Required configuration is missing');
+    }
+    this.containerName = _.get(config, 'containerName');
+    this.reportsContainer = _.get(config, 'reportsContainer') + '/';
+    this._storage = new Storage({
+      credentials: {
+        client_email: _.get(config, 'identity'),
+        private_key: _.get(config, 'credential')?.toString()
+      },
+      projectId: _.get(config, 'projectId')
+    });
+  }
 
   fileExists(bucketName, fileToGet, prefix = '', cb) {
-    const file = _storage.bucket(bucketName).file(prefix + fileToGet);
+    const file = this._storage.bucket(bucketName).file(prefix + fileToGet);
     logger.info({ msg: 'GCLOUD__StorageService - fileExists called for bucketName ' + bucketName + ' for file ' + prefix + fileToGet });
     file.exists((err, exists) => {
       if (err) cb(err);
@@ -50,13 +55,13 @@ class GCPStorageService extends BaseStorageService {
    */
   fileReadStream(bucketName = undefined, fileToGet = undefined) {
     return async (req, res, next) => {
-      let bucketName = envHelper.sunbird_gcloud_bucket_name;
-      let fileToGet = reports + req.params.slug.replace('__', '\/') + '/' + req.params.filename;
+      let bucketName = this.containerName;
+      let fileToGet = this.reportsContainer + req.params.slug.replace('__', '\/') + '/' + req.params.filename;
       logger.info({ msg: 'GCLOUD__StorageService - fileReadStream called for bucketName ' + bucketName + ' for file ' + fileToGet });
 
       if (fileToGet.includes('.json')) {
         try {
-          const file = _storage.bucket(bucketName).file(fileToGet)
+          const file = this._storage.bucket(bucketName).file(fileToGet)
           const fileStream = file.createReadStream();
           const streamToString = (stream) =>
             new Promise((resolve, reject) => {
@@ -127,7 +132,7 @@ class GCPStorageService extends BaseStorageService {
       expiryDate = expiresIn;
     }
     const _config = { action: 'read', expires: expiryDate };
-    const file = _storage.bucket(bucketName).file(prefix + fileToGet);
+    const file = this._storage.bucket(bucketName).file(prefix + fileToGet);
     await file.getSignedUrl(_config).then((signedUrl) => {
       cb(null, signedUrl && signedUrl.length > 0 && signedUrl[0]);
     }).catch((err) => cb(_.get(err, 'message')));
@@ -135,7 +140,7 @@ class GCPStorageService extends BaseStorageService {
 
   getFileProperties() {
     return (req, res, next) => {
-      const bucketName = envHelper.sunbird_gcloud_bucket_name;
+      const bucketName = this.containerName;
       const fileToGet = JSON.parse(req.query.fileNames);
       logger.info({ msg: 'GCLOUD__StorageService - getFileProperties called for bucketName ' + bucketName + ' for file ' + fileToGet });
       const responseData = {};
@@ -184,7 +189,7 @@ class GCPStorageService extends BaseStorageService {
   }
 
   async getBlobProperties(request, callback) {
-    const file = _storage.bucket(request.bucketName).file(reports + request.file);
+    const file = this._storage.bucket(request.bucketName).file(this.reportsContainer + request.file);
     file.getMetadata((err, metadata, resp) => {
       if (err) {
         logger.error({ msg: 'GCLOUD__StorageService : getBlobProperties_getMetadata client send error - Error 500 Failed to check file exists', err: err });
@@ -208,9 +213,9 @@ class GCPStorageService extends BaseStorageService {
   }
 
   async getFileAsText(container = undefined, fileToGet = undefined, callback) {
-    const bucketName = envHelper.sunbird_gcloud_bucket_name;
+    const bucketName = this.containerName;
     logger.info({ msg: 'GCLOUD__StorageService : getFileAsText called for bucket ' + bucketName + ' container ' + container + ' for file ' + fileToGet });
-    const file = _storage.bucket(bucketName).file(container + fileToGet);
+    const file = this._storage.bucket(bucketName).file(container + fileToGet);
     const fileStream = file.createReadStream();
     const streamToString = (stream) =>
       new Promise((resolve, reject) => {
@@ -254,5 +259,3 @@ class GCPStorageService extends BaseStorageService {
   }
 
 }
-
-module.exports = GCPStorageService;

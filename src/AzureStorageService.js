@@ -19,11 +19,11 @@ export class AzureStorageService extends BaseStorageService {
 
   constructor(config) {
     super();
-    if (!_.get(config, 'sunbird_azure_account_name') || !_.get(config, 'sunbird_azure_account_key')) {
-      throw new Error('AzureStorageService :: Required configuration is missing')
+    if (!_.get(config, 'identity') || !_.get(config, 'credential')) {
+      throw new Error('Azure__StorageService :: Required configuration is missing');
     }
-    this.sunbird_azure_report_container_name = _.get(config, 'sunbird_azure_report_container_name')
-    this.blobService = azure.createBlobService(config?.sunbird_azure_account_name, config?.sunbird_azure_account_key);
+    this.reportsContainer = _.get(config, 'reportsContainer') + '/';
+    this.blobService = azure.createBlobService(config?.identity, config?.credential);
   }
 
   fileExists(container, fileToGet, callback) {
@@ -62,7 +62,7 @@ export class AzureStorageService extends BaseStorageService {
 
   fileReadStream(container = undefined, fileToGet = undefined) {
     return (req, res, next) => {
-      let container = this.sunbird_azure_report_container_name;
+      let container = this.reportsContainer;
       let fileToGet = req.params.slug.replace('__', '\/') + '/' + req.params.filename;
       logger.info({ msg: 'Azure__StorageService - fileReadStream called for container ' + container + ' for file ' + fileToGet });
       if (fileToGet.includes('.json')) {
@@ -167,7 +167,7 @@ export class AzureStorageService extends BaseStorageService {
 
   getFileProperties(container = undefined, fileToGet = undefined) {
     return (req, res, next) => {
-      const container = this.sunbird_azure_report_container_name;
+      const container = this.reportsContainer;
       const fileToGet = JSON.parse(req.query.fileNames);
       logger.info({ msg: 'Azure__StorageService - getFileProperties called for container ' + container + ' for file ' + fileToGet });
       const responseData = {};

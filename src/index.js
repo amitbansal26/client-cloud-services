@@ -2,14 +2,15 @@
 /**
  * @file        - Entry file referencing Storage Service
  * @description - Entry file referencing Storage Service
- * @exports     - `AzureStorageService` and `AWSStorageService`
+ * @exports     - `AzureStorageService`, `AWSStorageService` and 'GCPStorageService`
+ * @author      - RAJESH KUMARAVEL
  * @since       - 5.0.3
  * @version     - 1.0.0
  */
 
 const AzureStorageService = require('./AzureStorageService');
-// const AWSStorageService   = require('./AWSStorageService');
-// const GCPStorageService   = require('./GCPStorageService');
+const AWSStorageService   = require('./AWSStorageService');
+const GCPStorageService   = require('./GCPStorageService');
 
 
 /**
@@ -17,18 +18,18 @@ const AzureStorageService = require('./AzureStorageService');
  * Export respective Storage Service
  */
 
-export function init(serviceProvider) {
-  switch (serviceProvider) {
+export function init(provider) {
+  switch (provider) {
     case 'azure':
       return AzureStorageService.AzureStorageService
       break;
-    // case 'aws':
-    //   exports.CLOUD_CLIENT = new AWSStorageService();
-    //   break;
-    // case 'gcloud':
-    //   exports.CLOUD_CLIENT = new GCPStorageService();
-    //   break;
-    default:
+    case 'aws':
+      return AWSStorageService.AWSStorageService
       break;
+    case 'gcloud':
+      return GCPStorageService.GCPStorageService
+      break;
+    default:
+      throw new Error(`Client Cloud Service - ${provider} provider is not supported`);
   }
 }
