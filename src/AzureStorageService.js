@@ -22,7 +22,7 @@ export class AzureStorageService extends BaseStorageService {
     if (!_.get(config, 'identity') || !_.get(config, 'credential')) {
       throw new Error('Azure__StorageService :: Required configuration is missing');
     }
-    this.reportsContainer = _.get(config, 'reportsContainer');
+    this.reportsContainer = _.get(config, 'reportsContainer')?.toString();
     this.blobService = azure.createBlobService(config?.identity, config?.credential);
   }
 
@@ -148,6 +148,7 @@ export class AzureStorageService extends BaseStorageService {
   }
 
   async getBlobProperties(request, callback) {
+    logger.info({ msg: 'Azure__StorageService - getBlobProperties called for container ' + request.container + ' for file ' + request.file });
     this.blobService.getBlobProperties(request.container, request.file, function (err, result, response) {
       if (err) {
         logger.error({ msg: 'Azure__StorageService : readStream error - Error with status code 404' });
