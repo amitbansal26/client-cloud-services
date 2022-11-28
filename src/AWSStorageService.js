@@ -23,16 +23,13 @@ export class AWSStorageService extends BaseStorageService {
 
   constructor(config) {
     super();
-    if (!_.get(config, 'identity') || !_.get(config, 'credential') ||
-      !_.get(config, 'region') || !_.get(config, 'containerName')) {
+    if (!_.get(config, 'identity') || !_.get(config, 'credential') || !_.get(config, 'region')) {
       throw new Error('AWS__StorageService :: Required configuration is missing');
     }
     process.env.AWS_ACCESS_KEY_ID = _.get(config, 'identity');
     process.env.AWS_SECRET_ACCESS_KEY = _.get(config, 'credential');
     const region = _.get(config, 'region').toString();
     this.client = new S3Client({ region });
-    this.containerName = _.get(config, 'containerName');
-    this.reportsContainer = _.get(config, 'reportsContainer') + '/';
   }
 
   /**
@@ -69,9 +66,9 @@ export class AWSStorageService extends BaseStorageService {
    * @param {string} bucketName       - Bucket name or folder name in storage service
    * @param {string} fileToGet        - File path in storage service
    */
-  fileReadStream(bucketName = undefined, fileToGet = undefined) {
+  fileReadStream(_bucketName = undefined, fileToGet = undefined) {
     return async (req, res, next) => {
-      let bucketName = this.containerName;
+      let bucketName = _bucketName;
       let fileToGet = req.params.slug.replace('__', '\/') + '/' + req.params.filename;
       logger.info({ msg: 'AWS__StorageService - fileReadStream called for bucketName ' + bucketName + ' for file ' + fileToGet });
 
@@ -87,7 +84,7 @@ export class AWSStorageService extends BaseStorageService {
               resolve(Buffer.concat(chunks).toString("utf8"))
             });
           });
-        await this.client.send(this.getAWSCommand(bucketName, fileToGet, this.reportsContainer)).then((resp) => {
+        await this.client.send(this.getAWSCommand(bucketName, fileToGet, undefined)).then((resp) => {
           streamToString(_.get(resp, 'Body')).then((data) => {
             res.end(data);
           }).catch((err) => {
@@ -101,11 +98,11 @@ export class AWSStorageService extends BaseStorageService {
           }
         });
       } else {
-        this.fileExists(bucketName, fileToGet, this.reportsContainer, async (error, resp) => {
+        this.fileExists(bucketName, fileToGet, undefined, async (error, resp) => {
           if (_.get(error, '$metadata.httpStatusCode') == 404) {
             storageLogger.s404(res, 'AWS__StorageService : fileExists error - Error with status code 404', error, 'File does not exists');
           } else if (_.get(resp, '$metadata.httpStatusCode') == 200) {
-            const command = this.getAWSCommand(bucketName, fileToGet, this.reportsContainer);
+            const command = this.getAWSCommand(bucketName, fileToGet, undefined);
             // `expiresIn` - The number of seconds before the presigned URL expires
             const presignedURL = await getSignedUrl(this.client, command, { expiresIn: 3600 });
             const response = {
@@ -128,9 +125,9 @@ export class AWSStorageService extends BaseStorageService {
     }
   }
 
-  getFileProperties() {
+  getFileProperties(_bucketName = undefined) {
     return (req, res, next) => {
-      const bucketName = this.containerName;
+      const bucketName = _bucketName;
       const fileToGet = JSON.parse(req.query.fileNames);
       logger.info({ msg: 'AWS__StorageService - getFileProperties called for bucketName ' + bucketName + ' for file ' + fileToGet });
       const responseData = {};
@@ -179,7 +176,7 @@ export class AWSStorageService extends BaseStorageService {
   }
 
   async getBlobProperties(request, callback) {
-    this.fileExists(request.bucketName, request.file, this.reportsContainer, (error, resp) => {
+    this.fileExists(request.bucketName, request.file, undefined, (error, resp) => {
       if (_.get(error, '$metadata.httpStatusCode') == 404) {
         logger.error({ msg: 'AWS__StorageService : getBlobProperties_fileExists error - Error with status code 404. File does not exists - ' + request.file, error: error });
         callback({ msg: _.get(error, 'name'), statusCode: _.get(error, '$metadata.httpStatusCode'), filename: request.file, reportname: request.reportname })
@@ -200,8 +197,8 @@ export class AWSStorageService extends BaseStorageService {
   }
 
   async getFileAsText(container = undefined, fileToGet = undefined, callback) {
-    const bucketName = this.containerName;
-    logger.info({ msg: 'AWS__StorageService : getFileAsText called for bucket ' + bucketName + ' container ' + container + ' for file ' + fileToGet });
+    const bucketName = container;
+    logger.info({ msg: 'AWS__StorageService : getFileAsText called for bucket ' + bucketName + ' for file ' + fileToGet });
     const streamToString = (stream) =>
       new Promise((resolve, reject) => {
         const chunks = [];
@@ -213,7 +210,7 @@ export class AWSStorageService extends BaseStorageService {
           resolve(Buffer.concat(chunks).toString("utf8"))
         });
       });
-    await this.client.send(this.getAWSCommand(bucketName, fileToGet, container)).then((resp) => {
+    await this.client.send(this.getAWSCommand(bucketName, fileToGet)).then((resp) => {
       streamToString(_.get(resp, 'Body')).then((data) => {
         callback(null, data);
       }).catch((err) => {
@@ -233,7 +230,7 @@ export class AWSStorageService extends BaseStorageService {
   blockStreamUpload(uploadContainer = undefined) {
     return (req, res) => {
       try {
-        const bucketName = this.containerName;
+        const bucketName = uploadContainer;
         const blobFolderName = new Date().toLocaleDateString();
         let form = new multiparty.Form();
         form.on('part', async (part) => {
@@ -241,7 +238,7 @@ export class AWSStorageService extends BaseStorageService {
             let size = part.byteCount - part.byteOffset;
             let name = `${_.get(req, 'query.deviceId')}_${Date.now()}.${_.get(part, 'filename')}`;
             logger.info({
-              msg: 'AWS__StorageService : blockStreamUpload Uploading file to container ' +
+              msg: 'AWS__StorageService : blockStreamUpload Uploading file to bucket ' +
                 uploadContainer + ' to folder ' + blobFolderName +
                 ' for file name ' + name + ' with size ' + size
             });

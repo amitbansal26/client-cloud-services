@@ -20,12 +20,9 @@ export class GCPStorageService extends BaseStorageService {
 
   constructor(config) {
     super();
-    if (!_.get(config, 'identity') || !_.get(config, 'credential') ||
-      !_.get(config, 'projectId') || !_.get(config, 'containerName')) {
+    if (!_.get(config, 'identity') || !_.get(config, 'credential') || !_.get(config, 'projectId')) {
       throw new Error('GCLOUD__StorageService :: Required configuration is missing');
     }
-    this.containerName = _.get(config, 'containerName');
-    this.reportsContainer = _.get(config, 'reportsContainer') + '/';
     this._storage = new Storage({
       credentials: {
         client_email: _.get(config, 'identity'),
@@ -53,10 +50,10 @@ export class GCPStorageService extends BaseStorageService {
    * @param {string} bucketName       - Bucket name or folder name in storage service
    * @param {string} fileToGet        - File path in storage service
    */
-  fileReadStream(bucketName = undefined, fileToGet = undefined) {
+  fileReadStream(_bucketName = undefined, fileToGet = undefined) {
     return async (req, res, next) => {
-      let bucketName = this.containerName;
-      let fileToGet = this.reportsContainer + req.params.slug.replace('__', '\/') + '/' + req.params.filename;
+      let bucketName = _bucketName;
+      let fileToGet = _bucketName + req.params.slug.replace('__', '\/') + '/' + req.params.filename;
       logger.info({ msg: 'GCLOUD__StorageService - fileReadStream called for bucketName ' + bucketName + ' for file ' + fileToGet });
 
       if (fileToGet.includes('.json')) {
@@ -138,9 +135,9 @@ export class GCPStorageService extends BaseStorageService {
     }).catch((err) => cb(_.get(err, 'message')));
   }
 
-  getFileProperties() {
+  getFileProperties(_bucketName = undefined) {
     return (req, res, next) => {
-      const bucketName = this.containerName;
+      const bucketName = _bucketName;
       const fileToGet = JSON.parse(req.query.fileNames);
       logger.info({ msg: 'GCLOUD__StorageService - getFileProperties called for bucketName ' + bucketName + ' for file ' + fileToGet });
       const responseData = {};
@@ -189,7 +186,7 @@ export class GCPStorageService extends BaseStorageService {
   }
 
   async getBlobProperties(request, callback) {
-    const file = this._storage.bucket(request.bucketName).file(this.reportsContainer + request.file);
+    const file = this._storage.bucket(request.bucketName).file(request.file);
     file.getMetadata((err, metadata, resp) => {
       if (err) {
         logger.error({ msg: 'GCLOUD__StorageService : getBlobProperties_getMetadata client send error - Error 500 Failed to check file exists', err: err });
@@ -213,8 +210,8 @@ export class GCPStorageService extends BaseStorageService {
   }
 
   async getFileAsText(container = undefined, fileToGet = undefined, callback) {
-    const bucketName = this.containerName;
-    logger.info({ msg: 'GCLOUD__StorageService : getFileAsText called for bucket ' + bucketName + ' container ' + container + ' for file ' + fileToGet });
+    const bucketName = container;
+    logger.info({ msg: 'GCLOUD__StorageService : getFileAsText called for bucket ' + bucketName + ' for file ' + fileToGet });
     const file = this._storage.bucket(bucketName).file(container + fileToGet);
     const fileStream = file.createReadStream();
     const streamToString = (stream) =>
