@@ -23,16 +23,13 @@ export class AWSStorageService extends BaseStorageService {
 
   constructor(config) {
     super();
-    if (!_.get(config, 'identity') || !_.get(config, 'credential') ||
-      !_.get(config, 'region') || !_.get(config, 'containerName')) {
+    if (!_.get(config, 'identity') || !_.get(config, 'credential') || !_.get(config, 'region')) {
       throw new Error('AWS__StorageService :: Required configuration is missing');
     }
     process.env.AWS_ACCESS_KEY_ID = _.get(config, 'identity');
     process.env.AWS_SECRET_ACCESS_KEY = _.get(config, 'credential');
     const region = _.get(config, 'region').toString();
     this.client = new S3Client({ region });
-    this.containerName = _.get(config, 'containerName');
-    this.reportsContainer = _.get(config, 'reportsContainer') + '/';
   }
 
   /**
@@ -87,7 +84,7 @@ export class AWSStorageService extends BaseStorageService {
               resolve(Buffer.concat(chunks).toString("utf8"))
             });
           });
-        await this.client.send(this.getAWSCommand(bucketName, fileToGet, this.reportsContainer)).then((resp) => {
+        await this.client.send(this.getAWSCommand(bucketName, fileToGet, undefined)).then((resp) => {
           streamToString(_.get(resp, 'Body')).then((data) => {
             res.end(data);
           }).catch((err) => {
@@ -101,11 +98,11 @@ export class AWSStorageService extends BaseStorageService {
           }
         });
       } else {
-        this.fileExists(bucketName, fileToGet, this.reportsContainer, async (error, resp) => {
+        this.fileExists(bucketName, fileToGet, undefined, async (error, resp) => {
           if (_.get(error, '$metadata.httpStatusCode') == 404) {
             storageLogger.s404(res, 'AWS__StorageService : fileExists error - Error with status code 404', error, 'File does not exists');
           } else if (_.get(resp, '$metadata.httpStatusCode') == 200) {
-            const command = this.getAWSCommand(bucketName, fileToGet, this.reportsContainer);
+            const command = this.getAWSCommand(bucketName, fileToGet, undefined);
             // `expiresIn` - The number of seconds before the presigned URL expires
             const presignedURL = await getSignedUrl(this.client, command, { expiresIn: 3600 });
             const response = {
@@ -179,7 +176,7 @@ export class AWSStorageService extends BaseStorageService {
   }
 
   async getBlobProperties(request, callback) {
-    this.fileExists(request.bucketName, request.file, this.reportsContainer, (error, resp) => {
+    this.fileExists(request.bucketName, request.file, undefined, (error, resp) => {
       if (_.get(error, '$metadata.httpStatusCode') == 404) {
         logger.error({ msg: 'AWS__StorageService : getBlobProperties_fileExists error - Error with status code 404. File does not exists - ' + request.file, error: error });
         callback({ msg: _.get(error, 'name'), statusCode: _.get(error, '$metadata.httpStatusCode'), filename: request.file, reportname: request.reportname })
