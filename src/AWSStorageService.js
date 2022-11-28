@@ -69,9 +69,9 @@ export class AWSStorageService extends BaseStorageService {
    * @param {string} bucketName       - Bucket name or folder name in storage service
    * @param {string} fileToGet        - File path in storage service
    */
-  fileReadStream(bucketName = undefined, fileToGet = undefined) {
+  fileReadStream(_bucketName = undefined, fileToGet = undefined) {
     return async (req, res, next) => {
-      let bucketName = this.containerName;
+      let bucketName = _bucketName;
       let fileToGet = req.params.slug.replace('__', '\/') + '/' + req.params.filename;
       logger.info({ msg: 'AWS__StorageService - fileReadStream called for bucketName ' + bucketName + ' for file ' + fileToGet });
 
@@ -128,9 +128,9 @@ export class AWSStorageService extends BaseStorageService {
     }
   }
 
-  getFileProperties() {
+  getFileProperties(_bucketName = undefined) {
     return (req, res, next) => {
-      const bucketName = this.containerName;
+      const bucketName = _bucketName;
       const fileToGet = JSON.parse(req.query.fileNames);
       logger.info({ msg: 'AWS__StorageService - getFileProperties called for bucketName ' + bucketName + ' for file ' + fileToGet });
       const responseData = {};
@@ -200,8 +200,8 @@ export class AWSStorageService extends BaseStorageService {
   }
 
   async getFileAsText(container = undefined, fileToGet = undefined, callback) {
-    const bucketName = this.containerName;
-    logger.info({ msg: 'AWS__StorageService : getFileAsText called for bucket ' + bucketName + ' container ' + container + ' for file ' + fileToGet });
+    const bucketName = container;
+    logger.info({ msg: 'AWS__StorageService : getFileAsText called for bucket ' + bucketName + ' for file ' + fileToGet });
     const streamToString = (stream) =>
       new Promise((resolve, reject) => {
         const chunks = [];
@@ -213,7 +213,7 @@ export class AWSStorageService extends BaseStorageService {
           resolve(Buffer.concat(chunks).toString("utf8"))
         });
       });
-    await this.client.send(this.getAWSCommand(bucketName, fileToGet, container)).then((resp) => {
+    await this.client.send(this.getAWSCommand(bucketName, fileToGet)).then((resp) => {
       streamToString(_.get(resp, 'Body')).then((data) => {
         callback(null, data);
       }).catch((err) => {
@@ -233,7 +233,7 @@ export class AWSStorageService extends BaseStorageService {
   blockStreamUpload(uploadContainer = undefined) {
     return (req, res) => {
       try {
-        const bucketName = this.containerName;
+        const bucketName = uploadContainer;
         const blobFolderName = new Date().toLocaleDateString();
         let form = new multiparty.Form();
         form.on('part', async (part) => {
@@ -241,7 +241,7 @@ export class AWSStorageService extends BaseStorageService {
             let size = part.byteCount - part.byteOffset;
             let name = `${_.get(req, 'query.deviceId')}_${Date.now()}.${_.get(part, 'filename')}`;
             logger.info({
-              msg: 'AWS__StorageService : blockStreamUpload Uploading file to container ' +
+              msg: 'AWS__StorageService : blockStreamUpload Uploading file to bucket ' +
                 uploadContainer + ' to folder ' + blobFolderName +
                 ' for file name ' + name + ' with size ' + size
             });
