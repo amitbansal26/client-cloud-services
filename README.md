@@ -24,6 +24,7 @@ This project is licensed under the MIT License. See LICENSE for more information
 - [Installation](#installation)
 - [Usage](#usage)
 - [Options](#options)
+- [Releases](#releases)
 ---
 
 ### Installation
@@ -66,3 +67,6 @@ storage.SERVICE_NAME()...
 | reportsContainer | Azure Reports Container Name | AWS Reports Container Name | GCloud Reports Container Name |
 |  labelsContainer |  Azure Labels Container Name |  AWS Labels Container Name |  GCloud Labels Container Name |
 
+### Releases
+
+[Release Notes](/README.md)
