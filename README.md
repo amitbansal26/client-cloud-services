@@ -69,4 +69,4 @@ storage.SERVICE_NAME()...
 
 ### Releases
 
-[Release Notes](/README.md)
+[Release Notes](/RELEASE.md)
