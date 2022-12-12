@@ -19,11 +19,15 @@ const uuidv1              = require('uuid/v1');
 export class GCPStorageService extends BaseStorageService {
 
   constructor(config) {
-    console.log('GCP config : ', config);
-    super(config);
-    console.log('super config ', config); // TODO: log!
-    if (!_.get(config, 'identity') || !_.get(config, 'credential') || !_.get(config, 'projectId')) {
-      throw new Error('GCLOUD__StorageService :: Required configuration is missing');
+    super();
+    if (!_.get(config, 'identity')) {
+      throw new Error('GCLOUD__StorageService :: Required configuration is missing - [identity]');
+    }
+    if (!_.get(config, 'credential')) {
+      throw new Error('GCLOUD__StorageService :: Required configuration is missing - [credential]');
+    }
+    if (!_.get(config, 'projectId')) {
+      throw new Error('GCLOUD__StorageService :: Required configuration is missing - [projectId]');
     }
     this._storage = new Storage({
       credentials: {
