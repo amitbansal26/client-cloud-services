@@ -244,6 +244,13 @@ export class GCPStorageService extends BaseStorageService {
     });
   }
 
+  blockStreamUpload(uploadContainer = undefined) {
+    return (req, res) => {
+      logger.info({ msg: 'GCLOUD__StorageService : blockStreamUpload called for bucket'});
+      return res.status(200);
+    }
+  }
+
   apiResponse({ responseCode, result, params: { err, errmsg, status } }) {
     return {
       'id': 'api.report',
