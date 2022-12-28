@@ -346,4 +346,7 @@ export class AWSStorageService extends BaseStorageService {
       'result': result
     }
   }
+  upload(container, fileName, filePath, callback) {
+    throw new Error('BaseStorageService :: upload() must be implemented');
+  }
 }
