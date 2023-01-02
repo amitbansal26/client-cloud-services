@@ -12,3 +12,5 @@ nvm use $NODE_VERSION # same is used in client and server
 npm install
 # building the client
 npm run build:prod
+# create dummy metadata file
+echo {\"ArtifactName\" : \"client-cloud-services\"} > metadata.json
