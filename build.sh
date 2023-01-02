@@ -4,6 +4,9 @@
 # setup node version
 NODE_VERSION=14.19.0
 # make sure node version exist
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 nvm use $NODE_VERSION # same is used in client and server
 # install the required dependencies and dev dependencies for build
 npm install
