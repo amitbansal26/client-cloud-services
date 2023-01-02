@@ -4,7 +4,7 @@
  * @since       - 5.0.1
  * @version     - 1.0.0
  * @implements  - BaseStorageService
- *                OCI Storage support S3 compatible API Please see the S3 API implementation 
+ *                OCI Storage support S3 compatible API Please see the S3 API implementation
  * @see {@link https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html | X-Amz-Credential}
  * @see {@link https://docs.aws.amazon.com/directconnect/latest/APIReference/CommonParameters.html#CommonParameters-X-Amz-Credential | X-Amz-Credential}
  */
@@ -29,8 +29,9 @@ export class OCIStorageService extends BaseStorageService {
     }
     process.env.OCI_ACCESS_KEY_ID = _.get(config, 'identity');
     process.env.OCI_SECRET_ACCESS_KEY = _.get(config, 'credential');
-    process.env.OCI_ENDPOINT = _.get(config, 'endpoint');
+//    process.env.OCI_ENDPOINT = _.get(config, 'endpoint');
     const region = _.get(config, 'region').toString();
+    const endpoint = _.get(config, 'endpoint').toString();
     this.client = new S3Client({
       endpoint: endpoint,
       region: region
