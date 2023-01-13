@@ -219,6 +219,7 @@ export class GCPStorageService extends BaseStorageService {
     const bucketName = container;
     logger.info({ msg: 'GCLOUD__StorageService : getFileAsText called for bucket ' + bucketName + ' for file ' + fileToGet });
     const file = this._storage.bucket(bucketName).file(container + fileToGet);
+    logger.info({ msg: 'GCLOUD__StorageService : getFileAsText called for bucket ' + bucketName + ' for file ' + container + fileToGet });
     const fileStream = file.createReadStream();
     const streamToString = (stream) =>
       new Promise((resolve, reject) => {
@@ -239,7 +240,7 @@ export class GCPStorageService extends BaseStorageService {
         logger.error({ msg: 'GCLOUD__StorageService : getFileAsText error - Error ' + _.get(err, 'code') + ' ' + _.get(err, 'message') });
       } else {
         callback({ err: 'Failed to display blob', statusCode: 500 })
-        logger.error({ msg: 'GCLOUD__StorageService : getFileAsText client send error - Error 500. Failed to display blob' });
+        logger.error({ msg: 'GCLOUD__StorageService : getFileAsText client send error - Error 500. Failed to display blob, Error ', err });
       }
     });
   }
