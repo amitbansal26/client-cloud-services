@@ -64,8 +64,9 @@ storage.SERVICE_NAME()...
 |      region      |              --              |         AWS Region         |               --              |          OCI Region           |
 |     projectId    |              --              |             --             |         GCP Project ID        |               --              | 
 |   containerName  |              --              |       AWS Bucket Name      |        GCP Bucket Name        |        OCI Bucket Name        | 
-| reportsContainer | Azure Reports Container Name | AWS Reports Container Name | GCloud Reports Container Name | OCI Reports Container Name    |
+| reportsContainer | Azure Reports Container Name | AWS Reports Container Name | GCloud Reports Container Name |  OCI Reports Container Name   |
 |  labelsContainer |  Azure Labels Container Name |  AWS Labels Container Name |  GCloud Labels Container Name |  OCI Labels Container Name    | 
+|     endpoint     |              --              |             --             |               --              |  OCI object storage endpoint  | 
 
 ### Releases
 
