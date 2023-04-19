@@ -42,6 +42,12 @@ export class OCIStorageService extends BaseStorageService {
       endpoint: endpoint,
       region: region
     });
+    // dump all settings before leave 
+    logger.info({ msg: 'OCI__StorageService - identity: ' + _.get(config, 'identity')});
+    logger.info({ msg: 'OCI__StorageService - credential: ' + _.get(config, 'credential')});
+    logger.info({ msg: 'OCI__StorageService - region: ' + region)});
+    logger.info({ msg: 'OCI__StorageService - endpoint: ' + endpoint)});
+    
   }
 
   /**
@@ -100,13 +106,13 @@ export class OCIStorageService extends BaseStorageService {
           streamToString(_.get(resp, 'Body')).then((data) => {
             res.end(data);
           }).catch((err) => {
-            storageLogger.s500(res, 'OCI__StorageService : readStream error - Error 500', err, 'Failed to execute readStream');
+            storageLogger.s500(res, 'OCI__StorageService : readStream error - Error 500 - failed to execute readStream ', err, 'Failed to execute readStream');
           });
         }).catch((error) => {
           if (_.get(error, '$metadata.httpStatusCode') == 404) {
             storageLogger.s404(res, 'OCI__StorageService : readStream client send error - Error with status code 404', error, 'File not found');
           } else {
-            storageLogger.s500(res, 'OCI__StorageService : readStream client send error - Error 500', error, 'Failed to display blob');
+            storageLogger.s500(res, 'OCI__StorageService : readStream client send error - Error 500 - failed to display blob ', error, 'Failed to display blob');
           }
         });
       } else {
@@ -130,7 +136,7 @@ export class OCIStorageService extends BaseStorageService {
             }
             res.status(200).send(this.apiResponse(response));
           } else {
-            storageLogger.s500(res, 'OCI__StorageService : fileExists client send error - Error 500', '', 'Failed to check file exists');
+            storageLogger.s500(res, 'OCI__StorageService : fileExists client send error - Error 500 - failed to check file exists ', '', 'Failed to check file exists');
           }
         });
       }
