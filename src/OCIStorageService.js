@@ -27,12 +27,18 @@ export class OCIStorageService extends BaseStorageService {
     if (!_.get(config, 'identity') || !_.get(config, 'credential') || !_.get(config, 'region') || !_.get(config, 'endpoint')) {
       throw new Error('OCI__StorageService :: Required configuration is missing');
     }
-    process.env.OCI_ACCESS_KEY_ID = _.get(config, 'identity');
-    process.env.OCI_SECRET_ACCESS_KEY = _.get(config, 'credential');
+//    process.env.OCI_ACCESS_KEY_ID = _.get(config, 'identity');
+//    process.env.OCI_SECRET_ACCESS_KEY = _.get(config, 'credential');
 //    process.env.OCI_ENDPOINT = _.get(config, 'endpoint');
     const region = _.get(config, 'region').toString();
     const endpoint = _.get(config, 'endpoint').toString();
     this.client = new S3Client({
+      credentials: {
+        accessKeyId: _.get(config, 'identity'),
+        secretAccessKey: _.get(config, 'credential'),
+      },
+      forcePathStyle: true,
+      signatureVersion: 'v4',     
       endpoint: endpoint,
       region: region
     });
