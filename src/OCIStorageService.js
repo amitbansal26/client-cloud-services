@@ -42,12 +42,6 @@ export class OCIStorageService extends BaseStorageService {
       endpoint: endpoint,
       region: region
     });
-    // dump all settings before leave 
-    logger.info({ msg: 'OCI__StorageService - identity: ' + _.get(config, 'identity')});
-    logger.info({ msg: 'OCI__StorageService - credential: ' + _.get(config, 'credential')});
-    logger.info({ msg: 'OCI__StorageService - region: ' + region)});
-    logger.info({ msg: 'OCI__StorageService - endpoint: ' + endpoint)});
-    
   }
 
   /**
