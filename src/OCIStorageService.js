@@ -164,10 +164,10 @@ export class OCIStorageService extends BaseStorageService {
                 responseData[(_.get(blob, 'error.reportname'))] = blob.error
               } else {
                 responseData[(_.get(blob, 'value.reportname'))] = {
-                  lastModified: _.get(blob, 'value.lastModified'),
+                  lastModified: _.get(blob, 'value.LastModified'),
                   reportname: _.get(blob, 'value.reportname'),
                   statusCode: _.get(blob, 'value.statusCode'),
-                  fileSize: _.get(blob, 'value.contentLength')
+                  fileSize: _.get(blob, 'value.ContentLength')
                 }
               }
             });
