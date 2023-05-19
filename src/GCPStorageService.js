@@ -272,4 +272,14 @@ export class GCPStorageService extends BaseStorageService {
     throw new Error('BaseStorageService :: upload() must be implemented');
   }
 
+  getSignedUrl(bucketName, filePath, expiresIn = 3600) {
+    let startDate = new Date();
+    let expiryDate = new Date(startDate);
+    expiryDate.setMinutes(startDate.getMinutes() + expiresIn);
+    startDate.setMinutes(startDate.getMinutes() - expiresIn);
+    const _config = { action: 'read', expires: expiryDate };
+    const file = this._storage.bucket(bucketName).file(filePath);
+    return file.getSignedUrl(_config);
+  }
+
 }

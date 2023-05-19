@@ -349,4 +349,10 @@ export class AWSStorageService extends BaseStorageService {
   upload(container, fileName, filePath, callback) {
     throw new Error('BaseStorageService :: upload() must be implemented');
   }
+
+  async getSignedUrl(container, filePath, expiresIn = 3600) {
+    const command = this.getAWSCommand(container, filePath, undefined);
+    const presignedURL = await getSignedUrl(this.client, command, { expiresIn: expiresIn });
+    return Promise.resolve(presignedURL);
+  }
 }
