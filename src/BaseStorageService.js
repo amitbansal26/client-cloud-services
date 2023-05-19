@@ -109,11 +109,10 @@ class BaseStorageService {
    * @description                    - get signed url for file
    * @throws                         - Throws Exception if method is not invoked without declaration
    * @param {string} container       - Container name or folder name in storage service
-   * @param {string} fileName         - File name of file to get signed url
    * @param {string} filePath         - File path for file to get signed url
    * @param {string} expiresIn       - signed url expires time in seconds, defult value is 3600
    */
-  getSignedUrl(container, fileName, filePath, expiresIn= 3600) {
+  getSignedUrl(container, filePath, expiresIn = 3600) {
     throw new Error('BaseStorageService :: getSignedUrl() must be implemented');
   }
 

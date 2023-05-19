@@ -351,12 +351,11 @@ export class AzureStorageService extends BaseStorageService {
     });
   }
 
-  getSignedUrl(container, fileName, filePath, expiresIn = 3600) {
+  getSignedUrl(container, filePath, expiresIn = 3600) {
     let startDate = new Date();
     let expiryDate = new Date(startDate);
     expiryDate.setMinutes(startDate.getMinutes() + expiresIn);
     startDate.setMinutes(startDate.getMinutes() - expiresIn);
-    let fileToGet = filePath + '/' + filename;
     let sharedAccessPolicy = {
       AccessPolicy: {
         Permissions: azure.BlobUtilities.SharedAccessPermissions.READ,
@@ -364,11 +363,9 @@ export class AzureStorageService extends BaseStorageService {
         Expiry: expiryDate
       }
     };
-
     let azureHeaders = {};
-    if (req.headers['content-disposition'] == 'attachment' && fileName) azureHeaders.contentDisposition = `attachment;filename=${fileName}`;
-    let token = this.generateSharedAccessSignature(container, fileToGet, sharedAccessPolicy, azureHeaders);
-    let sasUrl = this.getUrl(container, fileToGet, token);
+    let token = this.generateSharedAccessSignature(container, filePath, sharedAccessPolicy, azureHeaders);
+    let sasUrl = this.getUrl(container, filePath, token);
     return Promise.resolve(sasUrl);
   }
 }
