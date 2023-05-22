@@ -350,4 +350,22 @@ export class AzureStorageService extends BaseStorageService {
       }
     });
   }
+
+  getSignedUrl(container, filePath, expiresIn = 3600) {
+    let startDate = new Date();
+    let expiryDate = new Date(startDate);
+    expiryDate.setMinutes(startDate.getMinutes() + expiresIn);
+    startDate.setMinutes(startDate.getMinutes() - expiresIn);
+    let sharedAccessPolicy = {
+      AccessPolicy: {
+        Permissions: azure.BlobUtilities.SharedAccessPermissions.READ,
+        Start: startDate,
+        Expiry: expiryDate
+      }
+    };
+    let azureHeaders = {};
+    let token = this.generateSharedAccessSignature(container, filePath, sharedAccessPolicy, azureHeaders);
+    let sasUrl = this.getUrl(container, filePath, token);
+    return Promise.resolve(sasUrl);
+  }
 }
