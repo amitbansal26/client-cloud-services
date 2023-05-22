@@ -56,16 +56,17 @@ storage.SERVICE_NAME()...
 
 1. Configuration for respective Cloud Providers
 
-| Generalized keys |             Azure            |             AWS            |              GCP              |
-|:----------------:|:----------------------------:|:--------------------------:|:-----------------------------:|
-|     provider     |            `azure`           |            `aws`           |            `gcloud`           |
-|     identity     |      Azure Account Name      |       AWS Access Key       |        GCP Client Email       |
-|    credential    |       Azure Account Key      |       AWS Secret Key       |        GCP Private Key        |
-|      region      |              --              |         AWS Region         |               --              |
-|     projectId    |              --              |             --             |         GCP Project ID        |
-|   containerName  |              --              |       AWS Bucket Name      |        GCP Bucket Name        |
-| reportsContainer | Azure Reports Container Name | AWS Reports Container Name | GCloud Reports Container Name |
-|  labelsContainer |  Azure Labels Container Name |  AWS Labels Container Name |  GCloud Labels Container Name |
+| Generalized keys |             Azure            |             AWS            |              GCP              |              OCI              | 
+|:----------------:|:----------------------------:|:--------------------------:|:-----------------------------:|:-----------------------------:|
+|     provider     |            `azure`           |            `aws`           |            `gcloud`           |            `oci`              |
+|     identity     |      Azure Account Name      |       AWS Access Key       |        GCP Client Email       |        OCI S3 Access Key      |
+|    credential    |       Azure Account Key      |       AWS Secret Key       |        GCP Private Key        |        OCI S3 Secret Key      |
+|      region      |              --              |         AWS Region         |               --              |              OCI Region       |
+|     projectId    |              --              |             --             |         GCP Project ID        |                --             |
+|     endpoint     |              --              |             --             |               --              |        OCI S3 endpoint        |
+|   containerName  |              --              |       AWS Bucket Name      |        GCP Bucket Name        |        OCI Bucket Name        |
+| reportsContainer | Azure Reports Container Name | AWS Reports Container Name | GCloud Reports Container Name |   OCI Reports Container Name  |
+|  labelsContainer |  Azure Labels Container Name |  AWS Labels Container Name |  GCloud Labels Container Name |   OCI Labels Container Name   |
 
 ### Releases
 
