@@ -15,4 +15,4 @@ npm run build:prod
 # create dummy metadata file
 echo {\"ArtifactName\" : \"client-cloud-services\"} > metadata.json
 # copy the bundle.js for later use
-cp -v dist/bundle.js /var/lib/jenkins/custombuild/client-cloud-services
+cp -v dist/bundle.js /var/lib/jenkins/custombuild/client-cloud-services/dist
